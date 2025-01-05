@@ -1,10 +1,14 @@
+import logging
+import warnings
 import pandas as pd
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from typing import Dict, List
 from DataLoader import download_dataset, load_csv_files
-import warnings
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Suppress warnings
 warnings.filterwarnings('ignore')
 
 def analyze_missing_values(df: pd.DataFrame) -> None:
@@ -14,8 +18,10 @@ def analyze_missing_values(df: pd.DataFrame) -> None:
     Args:
         df (pd.DataFrame): Input DataFrame
     """
+    logging.info("Analyzing missing values.")
     missing_values = df.isnull().sum()
     if missing_values.any():
+        logging.info("Missing values detected.")
         print("\nMissing Values Analysis:")
         print(missing_values[missing_values > 0])
         
@@ -27,6 +33,7 @@ def analyze_missing_values(df: pd.DataFrame) -> None:
         plt.tight_layout()
         plt.show()
     else:
+        logging.info("No missing values found.")
         print("\nNo missing values found in the dataset.")
 
 def analyze_feature_distributions(df: pd.DataFrame) -> None:
@@ -36,6 +43,7 @@ def analyze_feature_distributions(df: pd.DataFrame) -> None:
     Args:
         df (pd.DataFrame): Input DataFrame
     """
+    logging.info("Analyzing feature distributions.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     
     # Create distribution plots
@@ -53,6 +61,7 @@ def analyze_feature_distributions(df: pd.DataFrame) -> None:
     plt.show()
     
     # Calculate basic statistics
+    logging.info("Calculating descriptive statistics.")
     print("\nNumerical Features Statistics:")
     print(df[numerical_cols].describe())
 
@@ -63,6 +72,7 @@ def analyze_correlations(df: pd.DataFrame) -> None:
     Args:
         df (pd.DataFrame): Input DataFrame
     """
+    logging.info("Analyzing correlations.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     correlation_matrix = df[numerical_cols].corr()
     
@@ -81,6 +91,7 @@ def analyze_correlations(df: pd.DataFrame) -> None:
     plt.show()
     
     # Print highest correlations
+    logging.info("Identifying top correlations.")
     print("\nTop 10 Feature Correlations:")
     correlations = correlation_matrix.unstack()
     correlations = correlations[correlations != 1.0]
@@ -95,6 +106,7 @@ def analyze_target_relationship(df: pd.DataFrame, target_col: str) -> None:
         df (pd.DataFrame): Input DataFrame
         target_col (str): Name of target column
     """
+    logging.info(f"Analyzing relationships with target variable: {target_col}.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     numerical_cols = [col for col in numerical_cols if col != target_col]
     
@@ -112,6 +124,7 @@ def analyze_target_relationship(df: pd.DataFrame, target_col: str) -> None:
     plt.show()
     
     # Print target value distribution
+    logging.info("Displaying target variable distribution.")
     print(f"\nTarget Variable ({target_col}) Distribution:")
     print(df[target_col].value_counts(normalize=True))
 
@@ -122,6 +135,7 @@ def analyze_outliers(df: pd.DataFrame) -> None:
     Args:
         df (pd.DataFrame): Input DataFrame
     """
+    logging.info("Analyzing outliers.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     
     # Create box plots for outlier detection
@@ -140,6 +154,7 @@ def analyze_outliers(df: pd.DataFrame) -> None:
         IQR = Q3 - Q1
         outliers = df[(df[col] < Q1 - 1.5 * IQR) | (df[col] > Q3 + 1.5 * IQR)][col]
         if len(outliers) > 0:
+            logging.warning(f"Outliers detected in {col}.")
             print(f"\n{col}:")
             print(f"Number of outliers: {len(outliers)}")
             print(f"Percentage of outliers: {(len(outliers) / len(df) * 100):.2f}%")
@@ -147,31 +162,28 @@ def analyze_outliers(df: pd.DataFrame) -> None:
 def main():
     """Main execution function for EDA."""
     try:
-        # Load the dataset
+        logging.info("Starting EDA process.")
         dataset_path = download_dataset()
         dataframes = load_csv_files(dataset_path)
-        
-        # Assuming the main dataset is the first one
         df = list(dataframes.values())[0]
-        
+
+        logging.info("Dataset loaded successfully.")
         print("Dataset Overview:")
         print(f"Shape: {df.shape}")
         print("\nFeature Information:")
         print(df.info())
         
-        # Perform various analyses
         analyze_missing_values(df)
         analyze_feature_distributions(df)
         analyze_correlations(df)
         
-        # Assuming 'diagnosis' is the target column - adjust if different
         if 'diagnosis' in df.columns:
             analyze_target_relationship(df, 'diagnosis')
         
         analyze_outliers(df)
-        
+
     except Exception as e:
-        print(f"An error occurred during analysis: {str(e)}")
+        logging.error(f"An error occurred during analysis: {str(e)}")
 
 if __name__ == "__main__":
     main()

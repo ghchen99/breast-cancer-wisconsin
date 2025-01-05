@@ -45,7 +45,9 @@ def load_csv_files(directory_path: str) -> Dict[str, pd.DataFrame]:
         try:
             csv_path = os.path.join(directory_path, csv_file)
             key = os.path.splitext(csv_file)[0]
-            dataframes[key] = pd.read_csv(csv_path)
+            df = pd.read_csv(csv_path)
+            df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+            dataframes[key] = df
             print(f"Loaded {csv_file} successfully")
         except Exception as e:
             print(f"Error loading {csv_file}: {str(e)}")
