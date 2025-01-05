@@ -56,6 +56,23 @@ def load_csv_files(directory_path: str) -> Dict[str, pd.DataFrame]:
     return dataframes
 
 
+def save_dataframes_separately(dataframes: Dict[str, pd.DataFrame], output_dir: str) -> None:
+    """
+    Save each DataFrame separately as individual CSV files.
+    
+    Args:
+        dataframes (Dict[str, pd.DataFrame]): Dictionary of DataFrames to save
+        output_dir (str): Directory to save the separate CSV files
+    """
+    # Ensure the output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for key, df in dataframes.items():
+        output_path = os.path.join(output_dir, f"{key}.csv")
+        df.to_csv(output_path, index=False)
+        print(f"Saved {key} DataFrame to {output_path}")
+
+
 def display_dataframes(dataframes: Dict[str, pd.DataFrame], n_rows: int = 5) -> None:
     """
     Display the first n rows of each DataFrame.
@@ -76,10 +93,16 @@ def main():
     try:
         # Download and load the dataset
         dataset_path = download_dataset()
+        
+        # Load the CSV files from the downloaded path
         dataframes = load_csv_files(dataset_path)
         
         # Display the loaded data
         display_dataframes(dataframes)
+        
+        # Save each DataFrame separately to the data/ directory
+        output_dir = "data"
+        save_dataframes_separately(dataframes, output_dir)
         
     except Exception as e:
         print(f"An error occurred: {str(e)}")

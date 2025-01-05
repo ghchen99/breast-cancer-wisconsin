@@ -4,7 +4,6 @@ import os
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from src.data_preprocessing.data_loader import download_dataset, load_csv_files
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -154,9 +153,9 @@ def main():
     """Main execution function for EDA."""
     try:
         logging.info("Starting EDA process.")
-        dataset_path = download_dataset()
-        dataframes = load_csv_files(dataset_path)
-        df = list(dataframes.values())[0]
+        df = pd.read_csv('data/raw_dataset.csv')
+        logging.info("Dataset loaded successfully")
+        
         df['id'] = df['id'].astype(str)
 
         logging.info("Dataset loaded successfully.")
