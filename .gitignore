@@ -175,3 +175,6 @@ results/
 
 # Cleaned dataset
 data/
+
+# Models
+models/
