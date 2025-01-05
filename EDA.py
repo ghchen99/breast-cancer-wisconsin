@@ -1,5 +1,6 @@
 import logging
 import warnings
+import os
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -11,13 +12,22 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Suppress warnings
 warnings.filterwarnings('ignore')
 
-def analyze_missing_values(df: pd.DataFrame) -> None:
+# Create the directory for saving plots if it doesn't exist
+if not os.path.exists("plots"):
+    os.makedirs("plots")
+
+def save_plot(plot_name: str) -> None:
     """
-    Analyze and visualize missing values in the dataset.
+    Save the current plot to the 'plots' directory.
     
     Args:
-        df (pd.DataFrame): Input DataFrame
+        plot_name (str): Name of the plot file to save.
     """
+    plt.tight_layout()
+    plt.savefig(f'plots/{plot_name}.png')
+    logging.info(f"Plot saved as 'plots/{plot_name}.png'")
+
+def analyze_missing_values(df: pd.DataFrame) -> None:
     logging.info("Analyzing missing values.")
     missing_values = df.isnull().sum()
     if missing_values.any():
@@ -30,19 +40,12 @@ def analyze_missing_values(df: pd.DataFrame) -> None:
         missing_values.plot(kind='bar')
         plt.title('Missing Values by Feature')
         plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.show()
+        save_plot('missing_values_by_feature')
     else:
         logging.info("No missing values found.")
         print("\nNo missing values found in the dataset.")
 
 def analyze_feature_distributions(df: pd.DataFrame) -> None:
-    """
-    Analyze and visualize the distribution of numerical features.
-    
-    Args:
-        df (pd.DataFrame): Input DataFrame
-    """
     logging.info("Analyzing feature distributions.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     
@@ -57,8 +60,7 @@ def analyze_feature_distributions(df: pd.DataFrame) -> None:
         plt.title(f'Distribution of {col}')
         plt.xticks(rotation=45)
     
-    plt.tight_layout()
-    plt.show()
+    save_plot('feature_distributions')
     
     # Calculate basic statistics
     logging.info("Calculating descriptive statistics.")
@@ -66,12 +68,6 @@ def analyze_feature_distributions(df: pd.DataFrame) -> None:
     print(df[numerical_cols].describe())
 
 def analyze_correlations(df: pd.DataFrame) -> None:
-    """
-    Analyze and visualize feature correlations.
-    
-    Args:
-        df (pd.DataFrame): Input DataFrame
-    """
     logging.info("Analyzing correlations.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     correlation_matrix = df[numerical_cols].corr()
@@ -87,8 +83,7 @@ def analyze_correlations(df: pd.DataFrame) -> None:
     plt.title('Feature Correlation Heatmap')
     plt.xticks(rotation=45)
     plt.yticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+    save_plot('correlation_heatmap')
     
     # Print highest correlations
     logging.info("Identifying top correlations.")
@@ -99,13 +94,6 @@ def analyze_correlations(df: pd.DataFrame) -> None:
     print(correlations)
 
 def analyze_target_relationship(df: pd.DataFrame, target_col: str) -> None:
-    """
-    Analyze and visualize relationships between features and target variable.
-    
-    Args:
-        df (pd.DataFrame): Input DataFrame
-        target_col (str): Name of target column
-    """
     logging.info(f"Analyzing relationships with target variable: {target_col}.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     numerical_cols = [col for col in numerical_cols if col != target_col]
@@ -120,8 +108,7 @@ def analyze_target_relationship(df: pd.DataFrame, target_col: str) -> None:
         sns.boxplot(data=df, x=target_col, y=col)
         plt.title(f'{col} by {target_col}')
     
-    plt.tight_layout()
-    plt.show()
+    save_plot(f'target_relationship_{target_col}')
     
     # Print target value distribution
     logging.info("Displaying target variable distribution.")
@@ -129,12 +116,6 @@ def analyze_target_relationship(df: pd.DataFrame, target_col: str) -> None:
     print(df[target_col].value_counts(normalize=True))
 
 def analyze_outliers(df: pd.DataFrame) -> None:
-    """
-    Analyze and visualize outliers in numerical features.
-    
-    Args:
-        df (pd.DataFrame): Input DataFrame
-    """
     logging.info("Analyzing outliers.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     
@@ -143,8 +124,7 @@ def analyze_outliers(df: pd.DataFrame) -> None:
     sns.boxplot(data=df[numerical_cols])
     plt.title('Outlier Detection Using Box Plots')
     plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+    save_plot('outlier_detection')
     
     # Calculate and print outlier statistics
     print("\nOutlier Analysis:")
