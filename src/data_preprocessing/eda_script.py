@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from DataLoader import download_dataset, load_csv_files
+from src.data_preprocessing.data_loader import download_dataset, load_csv_files
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -13,19 +13,19 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 warnings.filterwarnings('ignore')
 
 # Create the directory for saving plots if it doesn't exist
-if not os.path.exists("plots"):
-    os.makedirs("plots")
+if not os.path.exists("results/figures"):
+    os.makedirs("results/figures")
 
 def save_plot(plot_name: str) -> None:
     """
-    Save the current plot to the 'plots' directory.
+    Save the current plot to the 'results/figures' directory.
     
     Args:
         plot_name (str): Name of the plot file to save.
     """
     plt.tight_layout()
-    plt.savefig(f'plots/{plot_name}.png')
-    logging.info(f"Plot saved as 'plots/{plot_name}.png'")
+    plt.savefig(f'results/figures/{plot_name}.png')
+    logging.info(f"Plot saved as 'results/figures/{plot_name}.png'")
 
 def analyze_missing_values(df: pd.DataFrame) -> None:
     logging.info("Analyzing missing values.")
@@ -48,7 +48,6 @@ def analyze_missing_values(df: pd.DataFrame) -> None:
 def analyze_feature_distributions(df: pd.DataFrame) -> None:
     logging.info("Analyzing feature distributions.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
-    
     
     # Create distribution plots
     n_cols = 3
@@ -140,6 +139,17 @@ def analyze_outliers(df: pd.DataFrame) -> None:
             print(f"Number of outliers: {len(outliers)}")
             print(f"Percentage of outliers: {(len(outliers) / len(df) * 100):.2f}%")
 
+def perform_eda(df: pd.DataFrame) -> None:
+    """Perform all exploratory data analysis steps."""
+    analyze_missing_values(df)
+    analyze_feature_distributions(df)
+    analyze_correlations(df)
+    
+    if 'diagnosis' in df.columns:
+        analyze_target_relationship(df, 'diagnosis')
+    
+    analyze_outliers(df)
+
 def main():
     """Main execution function for EDA."""
     try:
@@ -155,14 +165,8 @@ def main():
         print("\nFeature Information:")
         print(df.info())
         
-        analyze_missing_values(df)
-        analyze_feature_distributions(df)
-        analyze_correlations(df)
-        
-        if 'diagnosis' in df.columns:
-            analyze_target_relationship(df, 'diagnosis')
-        
-        analyze_outliers(df)
+        # Perform EDA using the new function
+        perform_eda(df)
 
     except Exception as e:
         logging.error(f"An error occurred during analysis: {str(e)}")
