@@ -49,6 +49,7 @@ def analyze_feature_distributions(df: pd.DataFrame) -> None:
     logging.info("Analyzing feature distributions.")
     numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
     
+    
     # Create distribution plots
     n_cols = 3
     n_rows = (len(numerical_cols) + n_cols - 1) // n_cols
@@ -146,6 +147,7 @@ def main():
         dataset_path = download_dataset()
         dataframes = load_csv_files(dataset_path)
         df = list(dataframes.values())[0]
+        df['id'] = df['id'].astype(str)
 
         logging.info("Dataset loaded successfully.")
         print("Dataset Overview:")
