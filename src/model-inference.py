@@ -21,8 +21,7 @@ class ModelInference:
         """
         self.models_path = models_path
         self.models = {}
-        self.label_encoder = LabelEncoder()
-        self.label_encoder.classes_ = np.array(['B', 'M'])  # Binary classification: Benign vs Malignant
+        self.label_encoder = None
         
         # Configure logging
         logging.basicConfig(
@@ -30,6 +29,17 @@ class ModelInference:
             format='%(asctime)s - %(levelname)s - %(message)s'
         )
         
+        self.load_transformers()
+        
+    def load_transformers(self) -> None:
+        """Load all necessary transformers including label encoder."""
+        try:
+            self.label_encoder = joblib.load(os.path.join(self.models_path, 'label_encoder.joblib'))
+            logging.info("Successfully loaded label encoder")
+        except Exception as e:
+            logging.error(f"Error loading label encoder: {str(e)}")
+            raise
+
     def load_models(self) -> Dict[str, Any]:
         """
         Load all available trained models from the models directory.
@@ -129,6 +139,9 @@ class ModelInference:
             Tuple of (predictions, prediction probabilities)
         """
         try:
+            if self.label_encoder is None:
+                raise ValueError("Label encoder not loaded")
+                
             predictions = model.predict(X)
             probabilities = model.predict_proba(X)
             
@@ -197,6 +210,9 @@ class ModelInference:
             DataFrame with ensemble predictions
         """
         try:
+            if self.label_encoder is None:
+                raise ValueError("Label encoder not loaded")
+                
             # Get predictions from all models
             all_probas = np.array([result['probabilities'] for result in results.values()])
             
@@ -226,6 +242,10 @@ def main():
     try:
         # Initialize inference class
         inference = ModelInference(models_path='models/')
+        
+        # Print available classes from label encoder
+        if inference.label_encoder is not None:
+            print("\nAvailable classes:", inference.label_encoder.classes_)
         
         # Load example data (modify path as needed)
         input_data = pd.read_csv('data/inference_samples.csv')

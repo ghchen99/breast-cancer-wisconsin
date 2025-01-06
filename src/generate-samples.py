@@ -23,9 +23,28 @@ class TestDataGenerator:
             self.power_transformer = joblib.load(f'{self.models_path}/power_transformer.joblib')
             self.standard_scaler = joblib.load(f'{self.models_path}/standard_scaler.joblib')
             self.median_values = joblib.load(f'{self.models_path}/median_values.joblib')
+            self.label_encoder = joblib.load(f'{self.models_path}/label_encoder.joblib')
         except Exception as e:
             logging.error(f"Error loading transformers: {str(e)}")
             raise
+            
+    def get_label_classes(self):
+        """Get the classes from the label encoder."""
+        if self.label_encoder is not None:
+            return self.label_encoder.classes_
+        return None
+    
+    def encode_labels(self, labels):
+        """Encode labels using the loaded label encoder."""
+        if self.label_encoder is not None:
+            return self.label_encoder.transform(labels)
+        raise ValueError("Label encoder not loaded")
+    
+    def decode_labels(self, encoded_labels):
+        """Decode labels using the loaded label encoder."""
+        if self.label_encoder is not None:
+            return self.label_encoder.inverse_transform(encoded_labels)
+        raise ValueError("Label encoder not loaded")
     
     def _generate_base_features(self, n_samples):
         """Generate base features with realistic ranges."""
@@ -124,7 +143,7 @@ class TestDataGenerator:
             df[numerical_cols] = self.standard_scaler.transform(df[numerical_cols])
         return df
 
-    def generate_data(self, n_samples=10):
+    def generate_data(self, n_samples=10, include_labels=False):
         """
         Generate complete test dataset following the exact same pipeline as training.
         """
@@ -132,19 +151,22 @@ class TestDataGenerator:
             # Generate base features
             df = self._generate_base_features(n_samples)
             
-            # Apply preprocessing in the same order as FeatureEngineering class
+            # Apply preprocessing and feature engineering
             df = self.handle_missing_values(df)
             df = self.apply_power_transform(df)
             df = self.handle_outliers(df)
-            
-            # Apply feature engineering in the same order
             df = self.create_key_ratios(df)
             df = self.create_core_statistical_features(df)
             df = self.create_shape_features(df)
-            
-            # Apply final scaling
             df = self.apply_scaling(df)
             
+            if include_labels:
+                # Generate random labels from actual classes
+                classes = self.get_label_classes()
+                if classes is not None:
+                    labels = np.random.choice(classes, size=n_samples)
+                    df['diagnosis'] = labels
+                    
             return df
             
         except Exception as e:

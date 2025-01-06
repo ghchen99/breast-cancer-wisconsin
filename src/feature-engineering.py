@@ -18,7 +18,7 @@ class FeatureEngineering:
         self.models_path = models_path
         self.power_transformer = None
         self.standard_scaler = None
-        self.encoders = {}
+        self.label_encoder = None
         self.median_values = {}
         self.cols_to_drop = []
         
@@ -35,6 +35,8 @@ class FeatureEngineering:
             joblib.dump(self.standard_scaler, f'{self.models_path}/standard_scaler.joblib')
         if self.median_values:
             joblib.dump(self.median_values, f'{self.models_path}/median_values.joblib')
+        if self.label_encoder:
+            joblib.dump(self.label_encoder, f'{self.models_path}/label_encoder.joblib')
             
     def load_transformers(self):
         """Load all transformers and values from disk."""
@@ -43,6 +45,7 @@ class FeatureEngineering:
             self.power_transformer = joblib.load(f'{self.models_path}/power_transformer.joblib')
             self.standard_scaler = joblib.load(f'{self.models_path}/standard_scaler.joblib')
             self.median_values = joblib.load(f'{self.models_path}/median_values.joblib')
+            self.label_encoder = joblib.load(f'{self.models_path}/label_encoder.joblib')
         except FileNotFoundError as e:
             logging.warning(f"Could not load transformers: {str(e)}")
             raise
@@ -62,6 +65,13 @@ class FeatureEngineering:
         )
         
         return X_train, X_test, y_train, y_test
+    
+    def encode_labels(self, y):
+        """Encode labels using LabelEncoder."""
+        if self.label_encoder is None:
+            self.label_encoder = LabelEncoder()
+            return self.label_encoder.fit_transform(y)
+        return self.label_encoder.transform(y)
     
     def clean_missing_values(self, train_df: pd.DataFrame, test_df: pd.DataFrame = None) -> tuple:
         """Handle missing values using only training data statistics."""
@@ -180,9 +190,9 @@ class FeatureEngineering:
                 logging.info("Processing training data")
                 X_train, X_test, y_train, y_test = self.split_data(df)
                 
-                self.encoders['diagnosis'] = LabelEncoder()
-                y_train = self.encoders['diagnosis'].fit_transform(y_train)
-                y_test = self.encoders['diagnosis'].transform(y_test)
+                # Encode labels
+                y_train = self.encode_labels(y_train)
+                y_test = self.encode_labels(y_test)
 
                 y_train = pd.Series(y_train, index=X_train.index)
                 y_test = pd.Series(y_test, index=X_test.index)
@@ -191,6 +201,7 @@ class FeatureEngineering:
                 X_train, X_test = self.detect_skewness(X_train, X_test)
                 X_train, X_test = self.handle_outliers(X_train, X_test)
                 
+                # Feature engineering
                 X_train = self.create_key_ratios(X_train)
                 X_train = self.create_core_statistical_features(X_train)
                 X_train = self.create_basic_shape_features(X_train)
@@ -199,6 +210,7 @@ class FeatureEngineering:
                 X_test = self.create_core_statistical_features(X_test)
                 X_test = self.create_basic_shape_features(X_test)
 
+                # Final scaling
                 numerical_cols = X_train.select_dtypes(include=['int64', 'float64']).columns
                 numerical_cols = [col for col in numerical_cols if col != 'id']
                 
