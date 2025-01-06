@@ -252,7 +252,7 @@ def main():
         if not os.path.exists("data"):
             os.makedirs("data")
         
-        df = pd.read_csv('data/raw_dataset.csv')
+        df = pd.read_csv('data/raw.csv')
         logging.info("Dataset loaded successfully")
         df['id'] = df['id'].astype(str)
         

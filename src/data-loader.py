@@ -1,7 +1,6 @@
 import os
 import kagglehub
 import pandas as pd
-from typing import Dict
 
 
 def download_dataset() -> str:
@@ -19,91 +18,78 @@ def download_dataset() -> str:
         raise Exception(f"Failed to download dataset: {str(e)}")
 
 
-def load_csv_files(directory_path: str) -> Dict[str, pd.DataFrame]:
+def load_csv_file(file_path: str) -> pd.DataFrame:
     """
-    Load all CSV files from the specified directory into DataFrames.
+    Load a single CSV file into a DataFrame.
     
     Args:
-        directory_path (str): Path to directory containing CSV files
-        
+        file_path (str): Path to the CSV file
+
     Returns:
-        Dict[str, pd.DataFrame]: Dictionary mapping file names to DataFrames
+        pd.DataFrame: Loaded DataFrame
     """
-    if not os.path.exists(directory_path):
-        raise FileNotFoundError(f"Directory not found: {directory_path}")
-    
-    # Find all CSV files
-    files = os.listdir(directory_path)
-    csv_files = [f for f in files if f.endswith('.csv')]
-    
-    if not csv_files:
-        raise FileNotFoundError(f"No CSV files found in {directory_path}")
-    
-    # Load each CSV file into a DataFrame
-    dataframes = {}
-    for csv_file in csv_files:
-        try:
-            csv_path = os.path.join(directory_path, csv_file)
-            key = os.path.splitext(csv_file)[0]
-            df = pd.read_csv(csv_path)
-            df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-            dataframes[key] = df
-            print(f"Loaded {csv_file} successfully")
-        except Exception as e:
-            print(f"Error loading {csv_file}: {str(e)}")
-            continue
-    
-    return dataframes
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    try:
+        # Load the CSV file into a DataFrame
+        df = pd.read_csv(file_path)
+        # Drop columns with names starting with 'Unnamed'
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+        print(f"Loaded {file_path} successfully")
+        return df
+    except Exception as e:
+        raise Exception(f"Error loading {file_path}: {str(e)}")
 
 
-def save_dataframes_separately(dataframes: Dict[str, pd.DataFrame], output_dir: str) -> None:
+def save_dataframe(df: pd.DataFrame, output_path: str) -> None:
     """
-    Save each DataFrame separately as individual CSV files.
+    Save a DataFrame as a CSV file.
     
     Args:
-        dataframes (Dict[str, pd.DataFrame]): Dictionary of DataFrames to save
-        output_dir (str): Directory to save the separate CSV files
+        df (pd.DataFrame): DataFrame to save
+        output_path (str): Path to save the CSV file
     """
-    # Ensure the output directory exists
-    os.makedirs(output_dir, exist_ok=True)
-    
-    for key, df in dataframes.items():
-        output_path = os.path.join(output_dir, f"{key}.csv")
-        df.to_csv(output_path, index=False)
-        print(f"Saved {key} DataFrame to {output_path}")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df.to_csv(output_path, index=False)
+    print(f"Saved DataFrame to {output_path}")
 
 
-def display_dataframes(dataframes: Dict[str, pd.DataFrame], n_rows: int = 5) -> None:
+def display_dataframe(df: pd.DataFrame, n_rows: int = 5) -> None:
     """
-    Display the first n rows of each DataFrame.
-    
+    Display the first n rows of the DataFrame.
+
     Args:
-        dataframes (Dict[str, pd.DataFrame]): Dictionary of DataFrames to display
-        n_rows (int): Number of rows to display for each DataFrame
+        df (pd.DataFrame): DataFrame to display
+        n_rows (int): Number of rows to display
     """
-    for key, df in dataframes.items():
-        print(f"\nDataFrame: {key}")
-        print(f"Shape: {df.shape}")
-        print(df.head(n_rows))
-        print("-" * 80)
+    print(f"\nDataFrame Shape: {df.shape}")
+    print(df.head(n_rows))
+    print("-" * 80)
 
 
 def main():
     """Main execution function."""
     try:
-        # Download and load the dataset
+        # Download the dataset
         dataset_path = download_dataset()
-        
-        # Load the CSV files from the downloaded path
-        dataframes = load_csv_files(dataset_path)
-        
+
+        # Assume there is only one CSV file in the directory
+        csv_files = [f for f in os.listdir(dataset_path) if f.endswith('.csv')]
+        if not csv_files:
+            raise FileNotFoundError("No CSV files found in the dataset directory")
+
+        # Load the single CSV file
+        csv_file_path = os.path.join(dataset_path, csv_files[0])
+        df = load_csv_file(csv_file_path)
+
         # Display the loaded data
-        display_dataframes(dataframes)
-        
-        # Save each DataFrame separately to the data/ directory
-        output_dir = "data"
-        save_dataframes_separately(dataframes, output_dir)
-        
+        display_dataframe(df)
+
+        # Save the DataFrame to a separate directory
+        output_path = os.path.join("data", "raw.csv")
+        save_dataframe(df, output_path)
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 

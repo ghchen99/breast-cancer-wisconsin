@@ -153,7 +153,7 @@ def main():
     """Main execution function for EDA."""
     try:
         logging.info("Starting EDA process.")
-        df = pd.read_csv('data/raw_dataset.csv')
+        df = pd.read_csv('data/raw.csv')
         logging.info("Dataset loaded successfully")
         
         df['id'] = df['id'].astype(str)
