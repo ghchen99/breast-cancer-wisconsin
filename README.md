@@ -7,7 +7,9 @@ This project focuses on predicting whether a breast cancer tumor is malignant or
 - **Texture**: Standard deviation of gray-scale values.
 - **Perimeter** and **Area**.
 - **Smoothness**: Local variation in radius lengths.
-- **Compactness**: Calculated as (perimeter^2 / area - 1.0).
+- **Compactness**: Calculated as: \[
+\frac{\text{perimeter}^2}{\text{area}} - 1.0
+\]
 - **Concavity**: Severity of concave portions of the contour.
 - **Concave Points**: Number of concave portions of the contour.
 - **Symmetry** and **Fractal Dimension**: "Coastline approximation" - 1.
