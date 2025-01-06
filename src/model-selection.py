@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV, StratifiedKFold
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
@@ -138,7 +138,7 @@ class ModelSelector:
                 'model': SVC(random_state=self.config['random_state'], 
                            probability=True),
                 'params': {
-                    'C': np.logspace(-3, 3, 7),
+                    'C': np.logspace(-2, 3, 6),
                     'kernel': ['rbf', 'linear'],
                     'gamma': ['scale', 'auto'],
                     'class_weight': ['balanced', None]
@@ -148,7 +148,7 @@ class ModelSelector:
         return models
 
     def evaluate_model(self, y_true: pd.Series, y_pred: np.ndarray, 
-                      y_prob: np.ndarray) -> Dict[str, float]:
+                  y_prob: np.ndarray) -> Dict[str, float]:
         """
         Calculate various performance metrics for a model.
         
@@ -160,11 +160,12 @@ class ModelSelector:
         Returns:
             Dictionary containing various performance metrics
         """
+        
         return {
             'accuracy': accuracy_score(y_true, y_pred),
-            'precision': precision_score(y_true, y_pred),
-            'recall': recall_score(y_true, y_pred),
-            'f1': f1_score(y_true, y_pred),
+            'precision': precision_score(y_true, y_pred, zero_division=0),
+            'recall': recall_score(y_true, y_pred, zero_division=0),
+            'f1': f1_score(y_true, y_pred, zero_division=0),
             'roc_auc': roc_auc_score(y_true, y_prob[:, 1])
         }
 
@@ -226,10 +227,16 @@ class ModelSelector:
                     param_distributions=model_info['params'],
                     n_iter=self.config['n_iter'],
                     cv=cv,
-                    scoring=['roc_auc', 'precision', 'recall', 'f1'],
+                    scoring={
+                        'roc_auc': 'roc_auc',
+                        'precision': make_scorer(precision_score, zero_division=0),
+                        'recall': make_scorer(recall_score, zero_division=0),
+                        'f1': make_scorer(f1_score, zero_division=0)
+                    },
                     refit='roc_auc',
                     random_state=self.config['random_state'],
-                    n_jobs=-1
+                    n_jobs=-1,
+                    verbose=2  
                 )
                 
                 # Fit with progress monitoring
