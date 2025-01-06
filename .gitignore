@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Results folder
+results/
+
+# Cleaned dataset
+data/
+
+# Models
+models/
