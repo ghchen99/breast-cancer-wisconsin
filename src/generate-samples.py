@@ -180,7 +180,7 @@ def main():
         generator = TestDataGenerator()
         
         # Generate test samples
-        df = generator.generate_data(n_samples=10)
+        df = generator.generate_data(n_samples=100)
         
         # Save to CSV
         df.to_csv('data/inference_samples.csv', index=False)

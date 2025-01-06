@@ -4,6 +4,7 @@ import joblib
 import logging
 import os
 from typing import Dict, Any, List, Tuple
+from datetime import datetime
 
 class ModelInference:
     """
@@ -11,14 +12,16 @@ class ModelInference:
     Handles model loading, data preprocessing, and prediction generation.
     """
     
-    def __init__(self, models_path: str = 'models/'):
+    def __init__(self, models_path: str = 'models/', results_path: str = 'results/predictions/'):
         """
         Initialize ModelInference with path configurations.
         
         Args:
             models_path (str): Path to directory containing trained models
+            results_path (str): Path to directory for saving prediction results
         """
         self.models_path = models_path
+        self.results_path = results_path
         self.models = {}
         self.label_encoder = None
         
@@ -27,6 +30,9 @@ class ModelInference:
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s'
         )
+        
+        # Create results directory if it doesn't exist
+        os.makedirs(self.results_path, exist_ok=True)
         
         self.load_transformers()
         
@@ -152,51 +158,8 @@ class ModelInference:
         except Exception as e:
             logging.error(f"Error generating predictions: {str(e)}")
             raise
-            
-    def run_inference(self, 
-                     input_data: pd.DataFrame, 
-                     model_name: str = None) -> Dict[str, Any]:
-        """
-        Run inference on input data using specified or all available models.
         
-        Args:
-            input_data: Input DataFrame containing features
-            model_name: Optional specific model to use (if None, uses all models)
-            
-        Returns:
-            Dictionary containing predictions and probabilities for each model
-        """
-        try:
-            # Load models if not already loaded
-            if not self.models:
-                self.load_models()
                 
-            # Preprocess input data
-            X = self.preprocess_input(input_data)
-            
-            results = {}
-            models_to_use = {model_name: self.models[model_name]} if model_name else self.models
-            
-            for name, model in models_to_use.items():
-                predictions, probabilities = self.get_prediction(model, X)
-                
-                results[name] = {
-                    'predictions': predictions,
-                    'probabilities': probabilities,
-                    'prediction_df': pd.DataFrame({
-                        'id': input_data['id'] if 'id' in input_data.columns else range(len(X)),
-                        'predicted_class': predictions,
-                        'probability_benign': probabilities[:, 0],
-                        'probability_malignant': probabilities[:, 1]
-                    })
-                }
-                
-            return results
-            
-        except Exception as e:
-            logging.error(f"Error during inference: {str(e)}")
-            raise
-            
     def get_ensemble_prediction(self, 
                               results: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
         """
@@ -234,13 +197,108 @@ class ModelInference:
             logging.error(f"Error generating ensemble predictions: {str(e)}")
             raise
 
+            
+    def save_predictions(self, 
+                        results: Dict[str, Dict[str, Any]], 
+                        ensemble_df: pd.DataFrame = None,
+                        prefix: str = '') -> None:
+        """
+        Save prediction results to CSV files.
+        
+        Args:
+            results: Dictionary containing predictions from models
+            ensemble_df: Optional DataFrame containing ensemble predictions
+            prefix: Optional prefix for the filename
+        """
+        try:
+            # Create timestamp for unique filenames
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            
+            # Save individual model predictions
+            for model_name, result in results.items():
+                filename = f"{prefix}_{timestamp}_{model_name}_predictions.csv"
+                filepath = os.path.join(self.results_path, filename)
+                result['prediction_df'].to_csv(filepath, index=False)
+                logging.info(f"Saved predictions for {model_name} to {filepath}")
+            
+            # Save ensemble predictions if available
+            if ensemble_df is not None:
+                ensemble_filename = f"{prefix}_{timestamp}_ensemble_predictions.csv"
+                ensemble_filepath = os.path.join(self.results_path, ensemble_filename)
+                ensemble_df.to_csv(ensemble_filepath, index=False)
+                logging.info(f"Saved ensemble predictions to {ensemble_filepath}")
+                
+        except Exception as e:
+            logging.error(f"Error saving predictions: {str(e)}")
+            raise
+            
+    def run_inference(self, 
+                     input_data: pd.DataFrame, 
+                     model_name: str = None,
+                     save_results: bool = True,
+                     prefix: str = '') -> Dict[str, Any]:
+        """
+        Run inference on input data using specified or all available models.
+        
+        Args:
+            input_data: Input DataFrame containing features
+            model_name: Optional specific model to use (if None, uses all models)
+            save_results: Whether to save predictions to files
+            prefix: Optional prefix for saved files
+            
+        Returns:
+            Dictionary containing predictions and probabilities for each model
+        """
+        try:
+            # Load models if not already loaded
+            if not self.models:
+                self.load_models()
+                
+            # Preprocess input data
+            X = self.preprocess_input(input_data)
+            
+            results = {}
+            models_to_use = {model_name: self.models[model_name]} if model_name else self.models
+            
+            for name, model in models_to_use.items():
+                predictions, probabilities = self.get_prediction(model, X)
+                
+                results[name] = {
+                    'predictions': predictions,
+                    'probabilities': probabilities,
+                    'prediction_df': pd.DataFrame({
+                        'id': input_data['id'] if 'id' in input_data.columns else range(len(X)),
+                        'predicted_class': predictions,
+                        'probability_benign': probabilities[:, 0],
+                        'probability_malignant': probabilities[:, 1]
+                    })
+                }
+            
+            # Generate ensemble predictions if using multiple models
+            ensemble_df = None
+            if len(models_to_use) > 1:
+                ensemble_df = self.get_ensemble_prediction(results)
+            
+            # Save results if requested
+            if save_results:
+                self.save_predictions(results, ensemble_df, prefix)
+                
+            return results
+            
+        except Exception as e:
+            logging.error(f"Error during inference: {str(e)}")
+            raise
+
 def main():
     """
     Example usage of ModelInference class.
     """
     try:
         # Initialize inference class
-        inference = ModelInference(models_path='models/')
+        inference = ModelInference(
+            models_path='models/',
+            results_path='results/predictions/'
+        )
         
         # Print available classes from label encoder
         if inference.label_encoder is not None:
@@ -249,8 +307,12 @@ def main():
         # Load example data (modify path as needed)
         input_data = pd.read_csv('data/inference_samples.csv')
         
-        # Run inference using all available models
-        results = inference.run_inference(input_data)
+        # Run inference using all available models and save results
+        results = inference.run_inference(
+            input_data,
+            save_results=True,
+            prefix='batch_inference'
+        )
         
         # Generate ensemble predictions
         ensemble_predictions = inference.get_ensemble_prediction(results)
