@@ -6,19 +6,46 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler, PowerTransformer
 from scipy.stats import skew, zscore
+import joblib
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 warnings.filterwarnings('ignore')
 
 class FeatureEngineering:
-    def __init__(self, random_state=42, test_size=0.2):
+    def __init__(self, random_state=42, test_size=0.2, models_path='models'):
         self.random_state = random_state
         self.test_size = test_size
-        self.scalers = {}
+        self.models_path = models_path
+        self.power_transformer = None
+        self.standard_scaler = None
         self.encoders = {}
-        self.transformers = {}
         self.median_values = {}
         self.cols_to_drop = []
+        
+        # Create models directory if it doesn't exist
+        if not os.path.exists(models_path):
+            os.makedirs(models_path)
+            
+    def save_transformers(self):
+        """Save all transformers and values to disk."""
+        logging.info("Saving transformers and values to disk")
+        if self.power_transformer:
+            joblib.dump(self.power_transformer, f'{self.models_path}/power_transformer.joblib')
+        if self.standard_scaler:
+            joblib.dump(self.standard_scaler, f'{self.models_path}/standard_scaler.joblib')
+        if self.median_values:
+            joblib.dump(self.median_values, f'{self.models_path}/median_values.joblib')
+            
+    def load_transformers(self):
+        """Load all transformers and values from disk."""
+        logging.info("Loading transformers and values from disk")
+        try:
+            self.power_transformer = joblib.load(f'{self.models_path}/power_transformer.joblib')
+            self.standard_scaler = joblib.load(f'{self.models_path}/standard_scaler.joblib')
+            self.median_values = joblib.load(f'{self.models_path}/median_values.joblib')
+        except FileNotFoundError as e:
+            logging.warning(f"Could not load transformers: {str(e)}")
+            raise
         
     def split_data(self, df: pd.DataFrame) -> tuple:
         """Split data into train and test sets before any preprocessing."""
@@ -77,14 +104,14 @@ class FeatureEngineering:
                       if abs(skew(train_df[col])) > 0.5 and col not in ['diagnosis']]
         
         if skewed_cols:
-            if 'power' not in self.transformers:
-                self.transformers['power'] = PowerTransformer(method='yeo-johnson')
-                train_df[skewed_cols] = self.transformers['power'].fit_transform(train_df[skewed_cols])
+            if self.power_transformer is None:
+                self.power_transformer = PowerTransformer(method='yeo-johnson')
+                train_df[skewed_cols] = self.power_transformer.fit_transform(train_df[skewed_cols])
             else:
-                train_df[skewed_cols] = self.transformers['power'].transform(train_df[skewed_cols])
+                train_df[skewed_cols] = self.power_transformer.transform(train_df[skewed_cols])
             
             if not test_df.empty:
-                test_df[skewed_cols] = self.transformers['power'].transform(test_df[skewed_cols])
+                test_df[skewed_cols] = self.power_transformer.transform(test_df[skewed_cols])
         
         return (train_df, test_df) if not test_df.empty else train_df
     
@@ -118,7 +145,6 @@ class FeatureEngineering:
         """Create only the most important ratio features."""
         logging.info("Creating key ratio features")
         
-        # Only create the most discriminative ratios
         df['radius_to_perimeter_ratio'] = df['radius_mean'] / df['perimeter_mean']
         df['area_to_perimeter_ratio'] = df['area_mean'] / df['perimeter_mean']
         
@@ -128,7 +154,6 @@ class FeatureEngineering:
         """Create essential statistical features."""
         logging.info("Creating core statistical features")
         
-        # Focus on the most important measurements
         key_features = ['radius', 'area', 'concavity']
         
         for feature in key_features:
@@ -144,7 +169,6 @@ class FeatureEngineering:
         """Create fundamental shape features."""
         logging.info("Creating basic shape features")
         
-        # Only include the most informative shape feature
         df['circularity'] = (4 * np.pi * df['area_mean']) / (df['perimeter_mean'] ** 2)
         
         return df
@@ -154,10 +178,8 @@ class FeatureEngineering:
         try:
             if is_training:
                 logging.info("Processing training data")
-                # First split the data
                 X_train, X_test, y_train, y_test = self.split_data(df)
                 
-                # Encode target labels
                 self.encoders['diagnosis'] = LabelEncoder()
                 y_train = self.encoders['diagnosis'].fit_transform(y_train)
                 y_test = self.encoders['diagnosis'].transform(y_test)
@@ -165,12 +187,10 @@ class FeatureEngineering:
                 y_train = pd.Series(y_train, index=X_train.index)
                 y_test = pd.Series(y_test, index=X_test.index)
 
-                # Clean data
                 X_train, X_test = self.clean_missing_values(X_train, X_test)
                 X_train, X_test = self.detect_skewness(X_train, X_test)
                 X_train, X_test = self.handle_outliers(X_train, X_test)
                 
-                # Reduced feature engineering
                 X_train = self.create_key_ratios(X_train)
                 X_train = self.create_core_statistical_features(X_train)
                 X_train = self.create_basic_shape_features(X_train)
@@ -179,18 +199,24 @@ class FeatureEngineering:
                 X_test = self.create_core_statistical_features(X_test)
                 X_test = self.create_basic_shape_features(X_test)
 
-                # Final scaling
                 numerical_cols = X_train.select_dtypes(include=['int64', 'float64']).columns
                 numerical_cols = [col for col in numerical_cols if col != 'id']
                 
-                self.scalers['standard'] = StandardScaler()
-                X_train[numerical_cols] = self.scalers['standard'].fit_transform(X_train[numerical_cols])
-                X_test[numerical_cols] = self.scalers['standard'].transform(X_test[numerical_cols])
+                self.standard_scaler = StandardScaler()
+                X_train[numerical_cols] = self.standard_scaler.fit_transform(X_train[numerical_cols])
+                X_test[numerical_cols] = self.standard_scaler.transform(X_test[numerical_cols])
+                
+                # Save transformers after fitting
+                self.save_transformers()
                 
                 return X_train, X_test, y_train, y_test
             
             else:
                 logging.info("Processing prediction data")
+                # Load transformers if not already loaded
+                if self.power_transformer is None or self.standard_scaler is None:
+                    self.load_transformers()
+                    
                 X_new = self.clean_missing_values(df.copy())
                 X_new = self.detect_skewness(X_new)
                 X_new = self.handle_outliers(X_new)
@@ -200,9 +226,10 @@ class FeatureEngineering:
 
                 numerical_cols = X_new.select_dtypes(include=['int64', 'float64']).columns
                 numerical_cols = [col for col in numerical_cols if col != 'id']
-                X_new[numerical_cols] = self.scalers['standard'].transform(X_new[numerical_cols])
+                X_new[numerical_cols] = self.standard_scaler.transform(X_new[numerical_cols])
                 
                 return X_new
+                
         except Exception as e:
             logging.error(f"Error in data processing: {str(e)}")
             raise
