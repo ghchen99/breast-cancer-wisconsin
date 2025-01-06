@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler, PowerTransformer
 from scipy.stats import skew, zscore
 import joblib
+from src.dataset_loader import DatasetLoader
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 warnings.filterwarnings('ignore')
@@ -252,8 +253,10 @@ def main():
         if not os.path.exists("data"):
             os.makedirs("data")
         
-        df = pd.read_csv('data/raw.csv')
-        logging.info("Dataset loaded successfully")
+        # Load and process dataset
+        processor = DatasetLoader()
+        df, output_path = processor.process()
+        df = pd.read_csv(output_path)
         df['id'] = df['id'].astype(str)
         
         pipeline = FeatureEngineering(random_state=42, test_size=0.2)

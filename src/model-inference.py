@@ -4,7 +4,6 @@ import joblib
 import logging
 import os
 from typing import Dict, Any, List, Tuple
-from sklearn.preprocessing import LabelEncoder
 
 class ModelInference:
     """
