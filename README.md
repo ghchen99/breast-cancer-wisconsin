@@ -1,6 +1,18 @@
 # Breast Cancer Wisconsin
 
-A modular and maintainable machine learning pipeline for breast cancer classification.
+## Project Introduction
+This project focuses on predicting whether a breast cancer tumor is malignant or benign based on features computed from a digitised image of a fine needle aspirate (FNA) of a breast mass. The dataset describes characteristics of cell nuclei present in the image, such as:
+
+- **Radius**: Mean of distances from center to points on the perimeter.
+- **Texture**: Standard deviation of gray-scale values.
+- **Perimeter** and **Area**.
+- **Smoothness**: Local variation in radius lengths.
+- **Compactness**: Calculated as (perimeter^2 / area - 1.0).
+- **Concavity**: Severity of concave portions of the contour.
+- **Concave Points**: Number of concave portions of the contour.
+- **Symmetry** and **Fractal Dimension**: "Coastline approximation" - 1.
+
+By analysing these features, the goal is to develop a machine learning pipeline to predict tumor diagnosis accurately.
 
 ## Project Structure
 
