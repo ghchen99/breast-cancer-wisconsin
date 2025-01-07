@@ -1,8 +1,9 @@
-kagglehub
+numpy
 pandas
-seaborn 
-matplotlib 
 scikit-learn
-xgboost 
-numpy 
 joblib
+seaborn
+matplotlib
+shap
+kagglehub
+ipykernel
