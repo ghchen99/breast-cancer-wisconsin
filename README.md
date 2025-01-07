@@ -1,7 +1,44 @@
-# Breast Cancer Wisconsin
+# Breast Cancer Diagnosis Prediction
+
+A machine learning project that predicts breast cancer diagnosis (malignant vs benign) using cell nuclei characteristics from fine needle aspirate (FNA) images.
 
 ## Project Introduction
-This project focuses on predicting whether a breast cancer tumor is malignant or benign based on features computed from a digitised image of a fine needle aspirate (FNA) of a breast mass. The dataset describes characteristics of cell nuclei present in the image, such as:
+This project builds a Random Forest classifier to predict breast cancer diagnoses based on cell nuclei measurements. The model analyses various features like radius, texture, perimeter, area, smoothness, etc., extracted from digitised images of FNA samples.
+
+### Key Features
+- Automated cancer diagnosis prediction with ~98% accuracy
+- Comprehensive feature analysis and selection
+- Model performance visualization and interpretation
+- SHAP (SHapley Additive exPlanations) value analysis for model interpretability
+
+
+## Project Structure
+
+```
+├── data/
+│   └── cell-data.csv         # Processed dataset
+├── models/
+│   └── cancer_diagnosis_model.joblib  # Trained model
+├── notebooks/
+│   └── randomforest.ipynb    # Main analysis notebook
+└── results/
+    ├── boxplot_analysis.png
+    ├── confusion_matrix.png
+    ├── correlation_matrix.png
+    ├── feature_importance.png
+    ├── learning_curves.png
+    ├── roc_balanced_vs_unbalanced.png
+    └── shap_values_distribution.png
+```
+
+## Dataset
+
+The dataset contains measurements from digitised images of FNA samples, including:
+- Cell nuclei characteristics (30 features)
+- Binary classification (Malignant/Benign)
+- 569 instances
+
+Features include measurements of:
 
 - **Radius**: Mean of distances from center to points on the perimeter.
 - **Texture**: Standard deviation of gray-scale values.
@@ -14,30 +51,35 @@ This project focuses on predicting whether a breast cancer tumor is malignant or
 
 By analysing these features, the goal is to develop a machine learning pipeline to predict tumor diagnosis accurately.
 
-## Project Structure
+## Model Performance
 
-```
-project/
-│
-├── src/                      # Source code
-│   ├── preprocessing/        # Data preprocessing and feature engineering
-│   ├── models/              # Model training and evaluation
-│   ├── utils/               # Utility functions
-│   └── pipeline/            # Pipeline orchestration
-│
-├── configs/                  # Configuration files
-├── tests/                   # Unit tests
-├── scripts/                 # Training and inference scripts
-├── data/                    # Data directory
-└── models/                  # Saved models and states
-```
+The Random Forest classifier achieves:
+- ROC-AUC Score: ~0.99
+- Accuracy: ~97%
+- Precision: ~98%
+- Recall: ~96%
 
-## Installation
+## Key Findings
+
+1. Most important features for diagnosis:
+   - Concave points (worst)
+   - Area (worst)
+   - Perimeter (worst)
+
+2. Feature correlations:
+   - Strong correlations between radius, perimeter, and area measurements
+   - SE (standard error) measurements showed lower predictive power
+
+3. Model behavior:
+   - Excellent separation between malignant and benign cases
+   - Robust performance across different cross-validation splits
+   - High confidence in predictions with clear decision boundaries
+
+## Setup and Usage
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ml-pipeline.git
-cd ml-pipeline
+git clone git clone https://github.com/ghchen99/breast-cancer-wisconsin.git
 ```
 
 2. Create and activate a virtual environment:
@@ -51,68 +93,24 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Usage
-
-1. Training:
+4. Run the notebook:
 ```bash
-python scripts/train.py
+jupyter notebook notebooks/randomforest.ipynb
 ```
 
-2. Inference:
-```bash
-python scripts/predict.py
-```
+## Future Improvements
 
-## Configuration
+1. Feature engineering:
+    - Explore polynomial features
+    - Investigate feature ratios
 
-Modify `configs/config.yaml` to adjust:
-- Preprocessing parameters
-- Model hyperparameters
-- Training settings
+2. Model enhancements:
+    - Experiment with other algorithms (XGBoost, LightGBM)
+    - Implement ensemble methods
 
-Example configuration:
-```yaml
-preprocessing:
-  random_state: 42
-  handle_outliers: true
-  power_transform: true
-
-model:
-  random_state: 42
-  n_cv_folds: 5
-  n_iter: 20
-```
-
-## Development
-
-1. Running tests:
-```bash
-pytest tests/
-```
-
-2. Adding new features:
-- Add preprocessing steps in `src/preprocessing/feature_engineering.py`
-- Add new models in `src/models/model_trainer.py`
-- Update configuration in `configs/config.yaml`
-
-## Project Components
-
-### Feature Engineering
-- Handles missing values
-- Removes outliers
-- Creates engineered features
-- Applies necessary transformations
-
-### Model Training
-- Supports multiple models
-- Performs hyperparameter tuning
-- Evaluates model performance
-- Selects best model
-
-### Pipeline
-- Orchestrates end-to-end process
-- Manages state between training and inference
-- Handles configuration
+3. Deployment:
+    - Create API endpoint
+    - Develop web interface
 
 ## Contributing
 
