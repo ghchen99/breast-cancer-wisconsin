@@ -98,38 +98,6 @@ pip install -r requirements.txt
 jupyter notebook notebooks/randomforest.ipynb
 ```
 
-## Configuration
-
-Modify `configs/config.yaml` to adjust:
-- Preprocessing parameters
-- Model hyperparameters
-- Training settings
-
-Example configuration:
-```yaml
-preprocessing:
-  random_state: 42
-  handle_outliers: true
-  power_transform: true
-
-model:
-  random_state: 42
-  n_cv_folds: 5
-  n_iter: 20
-```
-
-## Development
-
-1. Running tests:
-```bash
-pytest tests/
-```
-
-2. Adding new features:
-- Add preprocessing steps in `src/preprocessing/feature_engineering.py`
-- Add new models in `src/models/model_trainer.py`
-- Update configuration in `configs/config.yaml`
-
 ## Future Improvements
 
 1. Feature engineering:
