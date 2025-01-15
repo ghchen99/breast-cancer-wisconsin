@@ -14,12 +14,12 @@ The model analyzes various features like radius, texture, perimeter, area, smoot
 
 ```
 ├── data/
-│   └── cell-data.csv                  # Processed dataset
+│   └── cell-data.csv                     # Processed dataset (created by notebook)
 ├── models/
-│   └── cancer_diagnosis_model.joblib   # Trained model
+│   └── cancer_diagnosis_model.joblib     # Trained model
 ├── notebooks/
-│   └── randomforest.ipynb             # Model training notebook
-├── results/                           # Analysis visualizations
+│   └── randomforest.ipynb                # Model training notebook
+├── results/                              # Analysis visualisations (created by notebook)
 │   ├── boxplot_analysis.png
 │   ├── confusion_matrix.png
 │   ├── correlation_matrix.png
@@ -27,11 +27,12 @@ The model analyzes various features like radius, texture, perimeter, area, smoot
 │   ├── learning_curves.png
 │   ├── roc_balanced_vs_unbalanced.png
 │   └── shap_values_distribution.png
-└── app/                              # Web application
+└── app/                                           # Web application
     ├── backend/
-    │   ├── app.py                    # Flask server
-    │   ├── models/                   # Model directory
-    │   └── requirements.txt          # Python dependencies
+    │   ├── app.py                                 # Flask server
+    │   ├── models/   
+    |   |   └── cancer_diagnosis_model.joblib      # Model directory
+    │   └── requirements.txt                       # Python dependencies
     └── frontend/
         ├── src/
         │   ├── components/
