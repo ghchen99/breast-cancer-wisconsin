@@ -1,6 +1,3 @@
-Here's the complete Markdown file you can copy and use:
-
-```markdown
 # Breast Cancer Diagnosis Prediction
 
 A comprehensive machine learning project that predicts breast cancer diagnosis (malignant vs benign) using cell nuclei characteristics from fine needle aspirate (FNA) images, with an interactive web interface for real-time predictions.
@@ -197,6 +194,3 @@ MIT License
 ## Support
 
 For support, please open an issue in the GitHub repository.
-```
-
-You can save this directly as `README.md` in your project's root directory. The file uses standard Markdown syntax and should render properly on GitHub and other Markdown viewers.
