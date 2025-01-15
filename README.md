@@ -2,6 +2,8 @@
 
 A comprehensive machine learning project that predicts breast cancer diagnosis (malignant vs benign) using cell nuclei characteristics from fine needle aspirate (FNA) images, with an interactive web interface for real-time predictions.
 
+<img src="./assets/screenshot.png" alt="Frontend Screenshot" width="600" />
+
 ## Project Introduction
 
 This project consists of two main components:
