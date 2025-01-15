@@ -180,3 +180,4 @@ data/
 models/
 
 app/frontend/node_modules/
+snapshot/
