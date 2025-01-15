@@ -7,3 +7,6 @@ matplotlib
 shap
 kagglehub
 ipykernel
+flask
+flask-cors
+

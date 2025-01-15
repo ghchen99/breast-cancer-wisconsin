@@ -178,3 +178,6 @@ data/
 
 # Models
 models/
+
+app/frontend/node_modules/
+snapshot/
