@@ -85,7 +85,7 @@ Features measured include:
 
 ```bash
 # Clone the repository
-git clone [repository-url]
+git clone https://github.com/ghchen99/breast-cancer-wisconsin.git
 
 # Create and activate virtual environment
 python -m venv venv
