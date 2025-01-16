@@ -24,25 +24,48 @@ FEATURE_ORDER = [
 ]
 
 def validate_input_ranges(data):
-    """Validate input values are within reasonable ranges based on training data"""
-    # These ranges are approximate based on the original dataset
+    """Validate input values are within reasonable ranges based on representative sample data analysis"""
     validation_rules = {
-        'radius': (6.0, 30.0),
-        'texture': (9.0, 40.0),
-        'perimeter': (40.0, 190.0),
-        'area': (140.0, 2600.0),
-        'smoothness': (0.05, 0.16),
-        'compactness': (0.02, 0.35),
-        'concavity': (0.0, 0.5),
-        'concave_points': (0.0, 0.2),
-        'symmetry': (0.1, 0.3),
-        'fractal_dimension': (0.05, 0.1)
+        # Mean values
+        'radius_mean': (10.07, 22.51),
+        'texture_mean': (15.26, 24.21),
+        'perimeter_mean': (65.13, 149.65),
+        'area_mean': (233.14, 1484.66),
+        'smoothness_mean': (0.069, 0.124),
+        'compactness_mean': (0.01, 0.276),
+        'concavity_mean': (0.01, 0.351),
+        'concave points_mean': (0.01, 0.158),
+        'symmetry_mean': (0.128, 0.222),
+        'fractal_dimension_mean': (0.051, 0.076),
+        
+        # Standard Error values
+        'radius_se': (0.15, 1.012),
+        'texture_se': (0.289, 2.310),
+        'perimeter_se': (0.735, 5.360),
+        'area_se': (10.0, 130.44),
+        'smoothness_se': (0.0039, 0.0114),
+        'compactness_se': (0.01, 0.0772),
+        'concavity_se': (0.001, 0.1014),
+        'concave points_se': (0.0006, 0.0274),
+        'symmetry_se': (0.0085, 0.0282),
+        'fractal_dimension_se': (0.001, 0.0075),
+        
+        # Worst values
+        'radius_worst': (9.95, 25.59),
+        'texture_worst': (17.42, 34.05),
+        'perimeter_worst': (71.73, 163.14),
+        'area_worst': (189.64, 1929.16),
+        'smoothness_worst': (0.089, 0.184),
+        'compactness_worst': (0.01, 0.893),
+        'concavity_worst': (0.01, 1.162),
+        'concave points_worst': (0.01, 0.311),
+        'symmetry_worst': (0.182, 0.366),
+        'fractal_dimension_worst': (0.044, 0.132)
     }
 
     for feature in FEATURE_ORDER:
-        base_feature = feature.split('_')[0]
-        if base_feature in validation_rules:
-            min_val, max_val = validation_rules[base_feature]
+        if feature in validation_rules:
+            min_val, max_val = validation_rules[feature]
             value = data[feature]
             if not (min_val <= value <= max_val):
                 raise ValueError(
